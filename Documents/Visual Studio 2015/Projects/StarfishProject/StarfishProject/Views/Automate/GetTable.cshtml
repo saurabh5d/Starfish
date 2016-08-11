@@ -1,0 +1,71 @@
+﻿
+@using StarfishProject.Helpers;
+@using System.Data;
+@using PagedList.Mvc;
+@using PagedList;
+@{
+    ViewBag.Title = "GetTable";
+}
+
+
+@{
+    var dbs = (DatabaseSchema)ViewData["DatabaseSchema"];
+}
+
+
+@{
+    var tbl = (Table)ViewData["TableData"];
+}
+@*@Model IPagedList<StarfishProject.Helpers.Table>*@
+@model StaticPagedList<System.Data.DataRow>
+<head>
+
+</head>
+
+@{
+    @Html.BeginForm("Search", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" })
+    {
+        <h1>Table : @tbl.table_display_name</h1>
+        <table id="table" class="table" border="1" style="align-content:center;border:groove">
+
+            <tr class="breadcrumb">
+                @foreach (var obj in tbl.columns)
+                {
+
+                    <th>
+                        @Html.ActionLink(obj.display_name, "SortColumn", "Automate", new { ColumnName = obj.column_name }, true)<br />
+                    <input type="text" name=@obj.column_name />
+                </th>
+                }
+                <th><input class="btn" type="submit" value="search" id="search" /></th>
+
+            </tr>
+            @{
+                var dra = dbs.dataset.Tables[tbl.table_name].Rows;
+            }
+           
+            @foreach (DataRow dr in Model)
+            {
+                <tr>
+                    @for (int i = 0; i < dr.ItemArray.Count(); i++)
+                    {
+                        <td>@dr[i]</td>
+                    }
+                </tr>
+            }
+
+                
+        </table>
+                }
+ 
+}
+
+
+
+@Html.PagedListPager(Model, page => Url.Action("GetTable", "Automate", new { page, TableName = ViewData["Table"] }), new PagedListRenderOptions() { Display = PagedListDisplayMode.Always, DisplayPageCountAndCurrentLocation = true })
+
+
+
+
+
+

@@ -1,0 +1,109 @@
+﻿@using StarfishProject.Helpers;
+@using System.Data;
+@{
+    ViewBag.Title = "Index";
+}
+
+@{
+    var dbs = (DatabaseSchema)ViewData["DatabaseSchema"];
+}
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    
+    <style>
+        
+   /* Set height of the grid so .sidenav can be 100% (adjust if needed) */
+   .row.content {height: 1500px}
+
+   /* Set gray background color and 100% height */
+   .sidenav {
+     background-color: #f1f1f1;
+     height: 100%;
+   }
+
+   /* Set black background color, white text and some padding */
+   footer {
+     background-color: #555;
+     color: white;
+     padding: 15px;
+   }
+
+   /* On small screens, set height to 'auto' for sidenav and grid */
+  
+     .sidenav {
+       height: auto;
+       padding: 15px;
+     }
+     .row.content {height: auto;}
+   
+    </style>
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("database automation", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    <li>@Html.ActionLink("About", "About", "Home")</li>
+                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </div>
+   
+            <div class="navbar-left sidenav" style="overflow:scroll;">
+                
+                    <h4>@dbs.database</h4>
+                    <ul class="nav nav-pills nav-stacked" >
+                        
+                        <li>@using (Html.BeginForm("GetTable", "Automate", FormMethod.Get))
+                        {
+                            @Html.TextBox("TableName");
+                            <br>
+
+                            <input type="submit" value="Search" />
+                        }</li>
+                        
+                            @foreach (var table in dbs.tables)
+                            {
+                                if (table.table_display_name == null)
+                                { table.table_display_name = table.table_name; }
+                                <li>@Html.ActionLink(table.table_display_name, "GetTable", "Automate", new { TableName = table.table_name }, true)</li>
+
+                            }
+                        
+                        </ul>
+</form>
+            </div>
+       
+            <div class="container body-content">
+                @RenderBody()
+                <hr />
+                
+            </div>
+
+          
+            @RenderSection("scripts", required: false)
+</body>
+</html>
