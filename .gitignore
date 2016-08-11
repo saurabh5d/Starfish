@@ -243,3 +243,60 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/.idlerc
+/.node-gyp/4.4.7
+/.oracle_jre_usage
+/.VirtualBox
+/.PyCharm2016.1
+/AppData
+/Desktop
+/Contacts
+/Downloads
+/Favorites
+/Music
+/Pictures
+/PycharmProjects
+/workspace
+/VirtualBox VMs/ubantu
+/Videos
+/Tracing/WPPMedia
+/Searches
+/Saved Games
+/Links
+/Documents/project njs
+/Documents/project ajs
+/Documents/New folder
+/Documents/My Web Sites/WebSite1
+/Documents/MobaXterm
+/Documents/main
+/Documents/IISExpress
+/Documents/hp.system.package.metadata
+/Documents/btcamp
+/Documents/Angularjs Assignment
+/Documents/Visual Studio 2015/Projects/Database2
+/Documents/Visual Studio 2015/Projects/Database1
+/Documents/Visual Studio 2015/Projects/ConsoleApplication3
+/Documents/Visual Studio 2015/Projects/ConsoleApplication2
+/Documents/Visual Studio 2015/Projects/ConsoleApplication1
+/Documents/Visual Studio 2015/Projects/GitProject
+/Documents/Visual Studio 2015/Projects/WebApplication3
+/Documents/Visual Studio 2015/Projects/WebApplication2
+/Documents/Visual Studio 2015/Projects/WebApplication1
+/Documents/Visual Studio 2015/Projects/SQLQuery2.sql
+/Documents/Visual Studio 2015/Settings
+/Documents/Visual Studio 2015/Visualizers
+/Documents/project njs.zip
+/Documents/project njs.tar
+/Documents/project ajs.zip
+/Documents/New folder.wim
+/Documents/New folder.7z
+/Documents/desktop.ini
+/ntuser.dat.LOG1
+/ntuser.dat.LOG2
+/NTUSER.DAT{016888bd-6c6f-11de-8d1d-001e0bcde3ec}.TM.blf
+/NTUSER.DAT{016888bd-6c6f-11de-8d1d-001e0bcde3ec}.TMContainer00000000000000000001.regtrans-ms
+/NTUSER.DAT{016888bd-6c6f-11de-8d1d-001e0bcde3ec}.TMContainer00000000000000000002.regtrans-ms
+/path1.txt
+/dbjson.txt
+/dbjson.json
+/NTUSER.DAT
