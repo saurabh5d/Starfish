@@ -15,7 +15,7 @@ namespace StarfishProject.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your application description page.4";
+            ViewBag.Message = "Your application description page.";
             return View();
         }
 
