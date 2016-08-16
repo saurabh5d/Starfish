@@ -7,6 +7,7 @@ using System.Web.Mvc;
 using PagedList.Mvc;
 using PagedList;
 using System.Data;
+using System.Net;
 
 namespace StarfishProject.Controllers
 {
@@ -22,12 +23,17 @@ namespace StarfishProject.Controllers
             ViewData["DatabaseSchema"] = dbs;
             return View();
         }
+
         public ActionResult GetTable(string TableName,int? page)
         {
             int page1 = page ?? default(int);
+
             var dbs = DatabaseManager.BuildDataset(TableName,page1);
             //var table= dbs.tables.
             //                Select(x => x.tblname.ToLower().Equals(TableName.ToLower()));
+            var SearchElement = Session["SearchElement"] as List<SearchBox>;
+            if (SearchElement != null)
+                Session["SearchElement"] = null;
 
             Table tableData = new Table();
             foreach (var table in dbs.tables)
@@ -80,6 +86,9 @@ namespace StarfishProject.Controllers
            }
             ViewData["TableData"] = table;
             ViewData["Table"] = table.table_name;
+
+            ViewData["SearchElement"] = SearchElement;
+
             var dbs = DatabaseManager.BuildDatasetForSearch(table, SearchElement,page1);
             ViewData["DatabaseSchema"]=dbs;
             DataRowCollection rows = dbs.dataset.Tables[table.table_name].Rows;
@@ -92,6 +101,7 @@ namespace StarfishProject.Controllers
             //Session["rows"] = trows;
             //Session["DatabaseSchema"] = dbs;
             Session["SearchElement"] = SearchElement;
+           
             return View(data);
         }
 
@@ -107,6 +117,7 @@ namespace StarfishProject.Controllers
             var dbs=DatabaseManager.BuildDatasetForSearch(table, SearchElement, page1);
             ViewData["TableData"] = table;
             ViewData["DatabaseSchema"] = dbs;
+
             /*foreach (var col in table.columns)
             {
                 SearchBox sbox = new SearchBox();
@@ -124,7 +135,7 @@ namespace StarfishProject.Controllers
             ViewData["Table"] = table.table_name;
             var dbs = DatabaseManager.BuildDatasetForSearch(table, SearchElement);
             ViewData["DatabaseSchema"] = dbs;*/
-           
+
             DataRow count = Session["rowcount"] as DataRow;
             int rowcount = Int32.Parse(count["count"].ToString());
             DataRowCollection rows = dbs.dataset.Tables[table.table_name].Rows;
@@ -149,10 +160,7 @@ namespace StarfishProject.Controllers
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
             var dbs = DatabaseManager.BuildSortDataset(table.table_name, ColumnName, page1, SearchElement);
 
-            //   if (!((table.table_name.ToLower().Equals(TableName.ToLower())) || (table.table_display_name.ToLower().Equals(TableName.ToLower()))))
-            //{
-
-            // }
+            
             ViewData["TableData"] = table;
             ViewData["DatabaseSchema"] = dbs;
             ViewData["ColumnName"] = ColumnName;
@@ -166,6 +174,23 @@ namespace StarfishProject.Controllers
             DataRow[] trows = rows.Cast<DataRow>().ToArray();
             StaticPagedList<DataRow> data = new StaticPagedList<DataRow>(trows, page ?? 1, 15, rowcount);
             return View(data);
+        }
+
+        //Delete
+       // [HttpPost, ActionName("Delete")]
+     //   [ValidateAntiForgeryToken]
+        public ActionResult Delete(string TableName, string id)
+        {
+            var table = Session["CurrentTable"] as Table;
+          
+            DatabaseManager.BuildDeleteDataset(table.table_name,id);
+
+            var SearchElement = Session["SearchElement"] as List<SearchBox>;
+
+            if(SearchElement == null)
+                return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+            else
+                return RedirectToAction("Search", "Automate", new { TableName = table.table_name });
         }
 
 

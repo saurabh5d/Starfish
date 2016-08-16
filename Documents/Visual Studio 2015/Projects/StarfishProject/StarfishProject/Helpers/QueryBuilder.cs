@@ -9,7 +9,8 @@ namespace StarfishProject.Helpers
         public static string SelectQueryBuilder(Table tbl, int page)
         {
             StringBuilder str = new StringBuilder("select ");
-            int offset = (page) * 15;
+            str.Append(tbl.primaryKey.pk_name+",");
+          //  int offset = (page) * 15;
             foreach (Column col in tbl.columns)
                 str.Append(col.column_name + ",");
             str.Remove(str.Length - 1, 1);
@@ -20,6 +21,7 @@ namespace StarfishProject.Helpers
         public static string JoinQueryBuilder(Table tbl, int page)
         {
             StringBuilder str = new StringBuilder("select ");
+            str.Append(tbl.table_name+"."+ tbl.primaryKey.pk_name + ",");
             int offset = (page) * 15;
             foreach (Column col in tbl.columns)
             {
@@ -157,6 +159,7 @@ namespace StarfishProject.Helpers
         public static string SortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement)
         {
             StringBuilder str = new StringBuilder("select ");
+            str.Append(tbl.primaryKey.pk_name + ",");
 
             foreach (Column col in tbl.columns)
                 str.Append(col.column_name + ",");
@@ -167,7 +170,7 @@ namespace StarfishProject.Helpers
                 str.Append(" where ");
                 foreach (SearchBox element in searchElement)
                 {
-                    str.Append(element.column_name + " like '%" + element.value + "%' AND");
+                    str.Append(element.column_name + " like '%" + element.value + "%' AND ");
                 }
                 str.Remove(str.Length - 4, 4);
             }
@@ -179,19 +182,41 @@ namespace StarfishProject.Helpers
         public static string JoinSortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement)
         {
             StringBuilder str = new StringBuilder(BuildJoinSearchQuery(tbl, searchElement, page));
-
-            //StringBuilder str = new StringBuilder("select ");
+         
             int limitindex = str.ToString().IndexOf("Limit");
             str.Remove(limitindex, str.Length - limitindex);
-            //foreach (Column col in tbl.columns)
-            //    str.Append(col.column_name + ",");
-            //str.Remove(str.Length - 1, 1);
-            //str.Append(" From " + tbl.table_name);
+            
             str.Append(" Order by " + ColumnName);
             str.Append(" Limit 15 Offset " + page * 15 + ";");
             return str.ToString();
 
         }
+
+        public static string DeleteQueryBuilder(Table tbl,string id)
+        {
+            StringBuilder str = new StringBuilder("DELETE ");
+            
+            str.Append("From " + tbl.table_name);
+            var pkey = DatabaseManager.getPrimaryKey(tbl);
+           // var type = DatabaseManager.getColumnType();
+        
+            str.Append(" where "+pkey+ " = cast( " + id+ " as "+tbl.primaryKey.pk_data_type+" )");           
+            return str.ToString();
+        }
+
+        //public static string JoinDeleteQueryBuilder(Table tbl, string id)
+        //{
+        //    StringBuilder str = new StringBuilder("DELETE ");
+
+        //    str.Append(" From " + tbl.table_name);
+        //    var pkey = DatabaseManager.getPrimaryKey(tbl);
+        //    // var type = DatabaseManager.getColumnType();
+
+        //    str.Append(" where " + pkey + " = cast( " + id + " as character varying(40))");
+        //    return str.ToString();
+        //}
+
+
     }
 }
     

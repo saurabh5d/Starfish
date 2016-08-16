@@ -26,12 +26,16 @@ namespace StarfishProject.Helpers
         public string fk_table { get; set; }
         public string pk_name { get; set; }
     }
-
+    public class PrimaryKey
+    {
+        public string pk_name { get; set; }
+        public string pk_data_type { get; set; }
+    }
     public class Table
     {
         public string table_name { get; set; }
-        public String table_display_name { get; set; }
-        public string primaryKey { get; set; }
+        public string table_display_name { get; set; }
+        public PrimaryKey primaryKey { get; set; }
         public List<ForeignKey> foreignKeys { get; set; }
         public List<Column> columns { get; set; }
 
@@ -209,6 +213,7 @@ namespace StarfishProject.Helpers
                 {
                     if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
                     {
+                        //var id = getPrimaryKey(table);
                         AddKeys(myAccessConn,schema, table.table_name);
                         getColumnType(myAccessConn, schema, table.table_name);
                         string query = "";
@@ -261,6 +266,54 @@ namespace StarfishProject.Helpers
         //    }
         //    return schema;
         //}
+
+        //for primary key
+        //public static void AddPrimaryKeys(OdbcConnection myAccessConn, DatabaseSchema schema, String tblname)
+        //{
+        //    // string ConnectionString = "Provider=PGNP.1;Data Source=localhost;User ID=postgres;Location=SFConnector_Trunk;password=admin123";
+        //    // using (OleDbConnection myAccessConn1 = new OleDbConnection(ConnectionString))
+
+        //    try
+        //    {
+        //        myAccessConn.Open();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.Write(e.Message);
+        //    }
+        //    foreach (var tbl in schema.tables)
+        //    {
+        //        if (tbl.table_name == tblname)
+        //        {
+                    
+        //            DatabaseSchema pschema = new DatabaseSchema();
+        //            string query = "SELECT k.column_name AS pk_Column_Name FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING(constraint_name,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_name= \'" + tblname + "\'";
+        //            try
+        //            {
+        //                pschema.dataset = new DataSet();
+        //                ExecuteQuery(tblname, myAccessConn, pschema, query);
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                Console.Write(e.Message);
+        //            }
+
+
+        //            //tbl.primaryKey = pschema.dataset.Tables[tblname].Rows.ToString();
+
+        //            foreach (DataRow dr in pschema.dataset.Tables[tblname].Rows)
+        //            {
+        //                tbl.primaryKey = dr["pK_COLUMN_NAME"].ToString();
+        //            }
+
+        //            break;
+        //        }
+        //    }
+
+        //}
+
+
+        //for foreign keys
         public static void AddKeys(OdbcConnection myAccessConn,DatabaseSchema schema, String tblname)
         {
            // string ConnectionString = "Provider=PGNP.1;Data Source=localhost;User ID=postgres;Location=SFConnector_Trunk;password=admin123";
@@ -357,8 +410,9 @@ namespace StarfishProject.Helpers
     //}
     public static string getPrimaryKey(Table tbl)
         {
-            return tbl.primaryKey;
+            return tbl.primaryKey.pk_name;
         }
+
         public static Table getTableFromName(string tableName,DatabaseSchema schema)
         {
             foreach(var table in schema.tables)
@@ -393,6 +447,7 @@ namespace StarfishProject.Helpers
                 if (tbl.table_name == tblname)
                 {
                     DataTable dt = new DataTable("col");
+                    // add data type of columns
                     foreach (var col in tbl.columns)
                     {
                         if (col.referred_table==null)
@@ -401,6 +456,9 @@ namespace StarfishProject.Helpers
                             dt = myAccessConn.GetSchema("Columns", new string[] { null, null, col.referred_table, col.column_name });
                         col.data_type = dt.Rows[0]["Type_Name"].ToString();
                     }
+                    // add data type of priimary key
+                    dt = myAccessConn.GetSchema("Columns", new string[] { null, null, tblname,tbl.primaryKey.pk_name });
+                    tbl.primaryKey.pk_data_type= dt.Rows[0]["Type_Name"].ToString();
                 }
             }
             try
@@ -415,7 +473,7 @@ namespace StarfishProject.Helpers
         }
         public static DatabaseSchema BuildSortDataset(String tblname, string ColumnName, int page, List<SearchBox> SearchElement)
         {
-            DatabaseSchema schema = JsonReader.Read();
+             DatabaseSchema schema = JsonReader.Read();
             schema.dataset = new DataSet();
 
             if (!String.IsNullOrEmpty(tblname))
@@ -448,6 +506,43 @@ namespace StarfishProject.Helpers
             }
             return schema;
         }
-        
+
+        public static void BuildDeleteDataset(String tblname,string id)
+        {
+            DatabaseSchema schema = JsonReader.Read();
+            schema.dataset = new DataSet();
+
+            if (!String.IsNullOrEmpty(tblname))
+            {
+
+                OdbcConnection myAccessConn = EstablishConnection(schema);
+
+                foreach (var table in schema.tables)
+                {
+                    if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
+                    {
+                        AddKeys(myAccessConn, schema, table.table_name);
+                        getColumnType(myAccessConn, schema, table.table_name);
+                        
+                        string query = "";
+                        //  string countquery = "";
+
+                        //if (table.foreignKeys.Count == 0)
+                       // {
+                            query = QueryBuilder.DeleteQueryBuilder(table,id);
+                        //}
+                        //else
+                        //{
+                        //    query = QueryBuilder.JoinDeleteQueryBuilder(table,id);
+                        //}
+                        //  countquery = QueryBuilder.BuildCountQuery(query);
+                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
+                        //  ExecuteQuery("count", myAccessConn, schema, countquery);
+                        break;
+                    }
+                }
+            }           
+        }
+
     }
 }

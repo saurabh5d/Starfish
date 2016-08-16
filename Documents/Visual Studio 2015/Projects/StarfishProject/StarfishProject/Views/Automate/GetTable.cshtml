@@ -34,38 +34,45 @@
 
                     <th>
                         @Html.ActionLink(obj.display_name, "SortColumn", "Automate", new { ColumnName = obj.column_name }, true)<br />
-                    <input type="text" name=@obj.column_name />
+                    <input type="text" name=@obj.column_name id=@obj.column_name />
+
                 </th>
                 }
-                <th><input class="btn" type="submit" value="search" id="search" /></th>
+                <th>
+                @Html.ActionLink("Reset", "GetTable", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" })
+                <input class="btn btn-primary" type="submit" value="Search" id="search" /></th>
 
             </tr>
             @{
                 var dra = dbs.dataset.Tables[tbl.table_name].Rows;
+                
+                
             }
            
-            @foreach (DataRow dr in Model)
+            @foreach (DataRow dr in dra)
             {
                 <tr>
-                    @for (int i = 0; i < dr.ItemArray.Count(); i++)
-                    {
+                    @for (int i = 1; i < dr.ItemArray.Count(); i++)
+                    { 
                         <td>@dr[i]</td>
                     }
+                    <td>
+                        
+                        @Html.ActionLink("Delete", "Delete", "Automate", new { TableName = tbl.table_name,id=dr[0] }, new {onclick = "return confirm('Are you sure you wish to delete this article?');" })
+                    </td>
+
                 </tr>
             }
 
                 
         </table>
-                }
+      }
  
 }
 
 
 
 @Html.PagedListPager(Model, page => Url.Action("GetTable", "Automate", new { page, TableName = ViewData["Table"] }), new PagedListRenderOptions() { Display = PagedListDisplayMode.Always, DisplayPageCountAndCurrentLocation = true })
-
-
-
 
 
 

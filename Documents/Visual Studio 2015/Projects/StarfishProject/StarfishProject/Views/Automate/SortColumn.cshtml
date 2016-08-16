@@ -16,6 +16,12 @@
 @{
     var tbl = (Table)ViewData["TableData"];
 }
+
+@{
+    var SearchElement = Session["SearchElement"] as List<SearchBox>;
+    int flag = 0;
+}
+
 @*@Model IPagedList<StarfishProject.Helpers.Table>*@
 @model StaticPagedList<System.Data.DataRow>
 <head>
@@ -32,12 +38,33 @@
                 @foreach (var obj in tbl.columns)
                 {
 
+                    flag = 0;
                     <th>
-                        @Html.ActionLink(obj.display_name, "SortColumn", "Automate", new { ColumnName = obj.column_name }, true)
-                        <br><input type="text" name=@obj.column_name />
+                        @Html.ActionLink(obj.display_name, "SortColumn", "Automate", new { ColumnName = obj.column_name }, true)<br />
+
+                        @if (SearchElement != null)
+                        {
+                            foreach (var col in SearchElement)
+                            {
+                                if (col.column_name == obj.column_name)
+                                {
+                                    <input type="text" name=@obj.column_name id=@obj.column_name value=@col.value />
+                                    flag = 1;
+                                    break;
+                                }
+
+                            }
+                        }
+                        @if (flag == 0)
+                        {
+                            <input type="text" name=@obj.column_name id=@obj.column_name />
+                        }
                     </th>
                 }
-                <th><input class="btn" type="submit" value="search" id="search" /></th>
+                <th>
+                    @Html.ActionLink("Reset", "GetTable", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" })
+                    <input class="btn btn-primary" type="submit" value="search" id="search" />
+                </th>
 
             </tr>
 
@@ -45,10 +72,13 @@
             @foreach (DataRow dr in Model)
                 {
                 <tr>
-                    @for (int i = 0; i < dr.ItemArray.Count(); i++)
+                    @for (int i = 1; i < dr.ItemArray.Count(); i++)
                     {
                         <td>@dr[i]</td>
                     }
+                    <td>
+                        @Html.ActionLink("Delete", "Delete", "Automate", new { TableName = tbl.table_name, id = dr[0] }, new { onclick = "return confirm('Are you sure you wish to delete this article?');" })
+                    </td>
                 </tr>
             }
 
