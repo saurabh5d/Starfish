@@ -151,6 +151,16 @@ namespace StarfishProject.Controllers
             return View(data);
         }
 
+        //Edit
+        public ActionResult Edit(string TableName, string id)
+        {
+            var table = Session["CurrentTable"] as Table;
+
+            DatabaseManager.BuildDeleteDataset(table.table_name, id);
+
+            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+        }
+
         //Delete
         public ActionResult Delete(string TableName, string id)
         {

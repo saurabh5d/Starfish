@@ -60,7 +60,7 @@
                         <td>@dr[i]</td>
                     }
                     <td>
-                        
+                        @Html.ActionLink("Edit", "Edit", "Automate", new { TableName = tbl.table_name, id = dr[0] }, null) &nbsp;
                         @Html.ActionLink("Delete", "Delete", "Automate", new { TableName = tbl.table_name,id=dr[0] }, new {onclick = "return confirm('Are you sure you wish to delete this article?');" })
                     </td>
 
