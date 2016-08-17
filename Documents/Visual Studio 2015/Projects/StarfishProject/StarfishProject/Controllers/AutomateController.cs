@@ -57,7 +57,7 @@ namespace StarfishProject.Controllers
             int rowcount = Int32.Parse(count["count"].ToString());
             DataRowCollection rows= dbs.dataset.Tables[table1.table_name].Rows;
             DataRow[] trows = rows.Cast<DataRow>().ToArray();
-            StaticPagedList<DataRow> data = new StaticPagedList<DataRow>(trows, page?? 1, 15,rowcount);
+            StaticPagedList<DataRow> data = new StaticPagedList<DataRow>(trows, page??1, 15,rowcount);
             Session["rowcount"] = count;
             Session["CurrentTable"] = table1;
             
