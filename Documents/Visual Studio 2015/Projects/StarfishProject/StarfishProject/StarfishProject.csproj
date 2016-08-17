@@ -286,6 +286,7 @@
     <Content Include="Views\Automate\GetTable.cshtml" />
     <Content Include="Views\Automate\Search.cshtml" />
     <Content Include="Views\Automate\SortColumn.cshtml" />
+    <Content Include="Views\Automate\Add.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

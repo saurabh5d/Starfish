@@ -31,8 +31,9 @@
     @Html.BeginForm("Search", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" })
     {
         <h1>Table : @tbl.table_display_name</h1>
-
-        <table id="table" class="table" border="1" style="align-content:center;border:groove">
+        @Html.ActionLink("Add", "Add", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" }) <br /><br />
+       
+         <table id="table" class="table" border="1" style="align-content:center;border:groove">
 
             <tr class="breadcrumb">
                 @foreach (var obj in tbl.columns)

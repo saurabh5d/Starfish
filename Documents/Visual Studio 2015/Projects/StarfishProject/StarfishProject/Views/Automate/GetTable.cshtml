@@ -26,6 +26,8 @@
     @Html.BeginForm("Search", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" })
     {
         <h1>Table : @tbl.table_display_name</h1>
+        @Html.ActionLink("Add", "Add", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" }) <br /><br />
+
         <table id="table" class="table" border="1" style="align-content:center;border:groove">
 
             <tr class="breadcrumb">
@@ -39,6 +41,7 @@
                 </th>
                 }
                 <th>
+                
                 @Html.ActionLink("Reset", "GetTable", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" })
                 <input class="btn btn-primary" type="submit" value="Search" id="search" /></th>
 

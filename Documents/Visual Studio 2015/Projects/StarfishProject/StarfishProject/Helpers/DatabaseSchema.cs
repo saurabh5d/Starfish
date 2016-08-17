@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
-using System.Data.OleDb;
 
 
 namespace StarfishProject.Helpers
@@ -12,6 +11,7 @@ namespace StarfishProject.Helpers
         public string column_name { get; set; }
         public string value { get; set; }
     }
+    
     public class Column
     {
         public string column_name { get; set; }
@@ -50,7 +50,6 @@ namespace StarfishProject.Helpers
     {
         public static OdbcConnection EstablishConnection(DatabaseSchema dbs)
         {
-            //string ConnectionString = "Provider=SQLNCLI11;Data Source=(localdb)\\ProjectsV13;Integrated Security=SSPI;Initial Catalog=" + dbs.database;
             string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
             OdbcConnection myAccessConn = null;
             try
@@ -66,24 +65,7 @@ namespace StarfishProject.Helpers
             }
             return myAccessConn;
         }
-        //public static OleDbConnection EstablishConnection(DatabaseSchema dbs)
-        //{
-        //    //string ConnectionString = "Provider=SQLNCLI11;Data Source=(localdb)\\ProjectsV13;Integrated Security=SSPI;Initial Catalog=" + dbs.database;
-        //    string ConnectionString = "Provider=PGNP.1;Data Source=localhost;User ID=postgres;Location=SFConnector_Trunk;password=admin123";
-        //    OleDbConnection myAccessConn = null;
-        //    try
-        //    {
-        //        myAccessConn = new OleDbConnection(ConnectionString);
 
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("Error: Failed to create a database connection. \n{0}", ex.Message);
-
-        //    }
-        //    return myAccessConn;
-        //}
         public static void ExecuteQuery(string tbl, OdbcConnection myAccessConn, DatabaseSchema schema, string query)
         {
 
@@ -93,10 +75,9 @@ namespace StarfishProject.Helpers
                 OdbcCommand myAccessCommand = new OdbcCommand(query, myAccessConn);
                 myAccessCommand.CommandTimeout = 5000;
                 OdbcDataAdapter myDataAdapter = new OdbcDataAdapter(myAccessCommand);
-
-                // ADODB.Recordset adoRS = new ADODB.Recordset();
+                
                 myDataAdapter.Fill(schema.dataset, tbl);
-                //schema.dataset.Tables.Add(table);
+                
             }
             catch (Exception ex)
             {
@@ -105,27 +86,50 @@ namespace StarfishProject.Helpers
             }
             myAccessConn.Close();
         }
-        //public static void ExecuteQuery(Table tbl, OleDbConnection myAccessConn, DatabaseSchema schema,string query)
-        //{
 
-        //    try
-        //    {
-        //        schema.dataset= new DataSet();
-        //         OleDbCommand myAccessCommand = new OleDbCommand(query, myAccessConn);
-        //        myAccessCommand.CommandTimeout = 5000;
-        //        OleDbDataAdapter myDataAdapter = new OleDbDataAdapter(myAccessCommand);
+        //index
+        public static DatabaseSchema BuildDataset()
+        {
+            DatabaseSchema schema = JsonReader.Read();
+            return schema;
+        }
 
-        //       // ADODB.Recordset adoRS = new ADODB.Recordset();
-        //        myDataAdapter.Fill(schema.dataset,tbl.table_name);
-        //        //schema.dataset.Tables.Add(table);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("Error: Failed to retrieve the required data from the DataBase.\n{0}", ex.Message);
+        public static DatabaseSchema BuildDataset(String tblname, int page)
+        {
+            DatabaseSchema schema = JsonReader.Read();
+            schema.dataset = new DataSet();
 
-        //    }
-        //    myAccessConn.Close();
-        //}
+            if (!String.IsNullOrEmpty(tblname))
+            {
+
+                OdbcConnection myAccessConn = EstablishConnection(schema);
+
+                foreach (var table in schema.tables)
+                {
+                    if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
+                    {
+                        AddKeys(myAccessConn, schema, table.table_name);
+                        getColumnType(myAccessConn, schema, table.table_name);
+                        string query = "";
+                        string countquery = "";
+                        if (table.foreignKeys.Count == 0)
+                        {
+                            query = QueryBuilder.SelectQueryBuilder(table, page);
+                        }
+                        else
+                        {
+                            query = QueryBuilder.JoinQueryBuilder(table, page);
+                        }
+                        countquery = QueryBuilder.BuildCountQuery(query);
+                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
+                        ExecuteQuery("count", myAccessConn, schema, countquery);
+                        break;
+                    }
+                }
+            }
+            return schema;
+        }//Build Get Table Data Set
+
         public static DatabaseSchema BuildDatasetForSearch(Table tbl, List<SearchBox> searchElement, int page)
         {
             DatabaseSchema schema = JsonReader.Read();
@@ -156,50 +160,9 @@ namespace StarfishProject.Helpers
 
             }
             return schema;
-        }
-        //public static DatabaseSchema BuildDatasetForSearch(Table tbl, List<SearchBox> searchElement,int page)
-        //{
-        //    DatabaseSchema schema = JsonReader.Read();
-        //    schema.dataset = new DataSet();
-        //    OleDbConnection myAccessConn = EstablishConnection(schema);
-        //    foreach (var table in schema.tables)
-        //    {
-        //        if (table.table_name.ToLower().Equals(tbl.table_name.ToLower()) || table.table_display_name.ToLower().Equals(tbl.table_name.ToLower()))
-        //        {
-        //            AddKeys(myAccessConn, schema, table.table_name);
-        //            getColumnType(myAccessConn, schema, table.table_name);
-        //            string query = "";
-        //            if (table.foreignKeys.Count == 0)
-        //            {
-        //                query = QueryBuilder.BuildSearchQuery(table, searchElement,page);
-        //            }
-        //            else
-        //            {
-        //                query = QueryBuilder.BuildJoinSearchQuery(table, searchElement,page);
-        //            }
+        }//Build Search Data Set
 
-        //            ExecuteQuery(table, myAccessConn,schema,query);
-        //            break;
-        //        }
-
-        //    }
-        //    return schema;
-        //}
-        //building dataset for showing sidebar(no need to build full dataset)
-        //index
-        public static DatabaseSchema BuildDataset()
-        {
-            DatabaseSchema schema = JsonReader.Read();
-            /*schema.dataset = new DataSet();
-            OleDbConnection myAccessConn = EstablishConnection(schema);
-            AddKeys(myAccessConn, schema);
-            foreach (var table in schema.tables)
-            {
-                ExecuteQuery(table, myAccessConn, schema);
-            }*/
-            return schema;
-        }
-        public static DatabaseSchema BuildDataset(String tblname, int page)
+        public static DatabaseSchema BuildSortDataset(String tblname, string ColumnName, int page, List<SearchBox> SearchElement)
         {
             DatabaseSchema schema = JsonReader.Read();
             schema.dataset = new DataSet();
@@ -208,210 +171,106 @@ namespace StarfishProject.Helpers
             {
 
                 OdbcConnection myAccessConn = EstablishConnection(schema);
-               
+
                 foreach (var table in schema.tables)
                 {
                     if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
                     {
-                        //var id = getPrimaryKey(table);
-                        AddKeys(myAccessConn,schema, table.table_name);
-                        getColumnType(myAccessConn, schema, table.table_name);
+                        AddKeys(myAccessConn, schema, table.table_name);
                         string query = "";
-                        string countquery = "";
+                     
                         if (table.foreignKeys.Count == 0)
                         {
-                            query = QueryBuilder.SelectQueryBuilder(table, page);
+                            query = QueryBuilder.SortQueryBuilder(table, ColumnName, page, SearchElement);
                         }
                         else
                         {
-                            query = QueryBuilder.JoinQueryBuilder(table, page);
+                            query = QueryBuilder.JoinSortQueryBuilder(table, ColumnName, page, SearchElement);
                         }
-                        countquery = QueryBuilder.BuildCountQuery(query);
+
                         ExecuteQuery(table.table_name, myAccessConn, schema, query);
-                        ExecuteQuery("count", myAccessConn, schema, countquery);
+
                         break;
                     }
                 }
             }
             return schema;
-        }
-        //for each table
-        //public static DatabaseSchema BuildDataset(String tblname,int page)
-        //{
-        //    DatabaseSchema schema = JsonReader.Read();
-        //    schema.dataset = new DataSet();
+        }//Build Sort Data Set
 
-        //    if (!String.IsNullOrEmpty(tblname))
-        //    {
-
-        //        OleDbConnection myAccessConn = EstablishConnection(schema);
-        //        foreach (var table in schema.tables)
-        //        {
-        //            if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
-        //            {
-        //                AddKeys(myAccessConn, schema, table.table_name);
-        //                string query = "";
-        //                if (table.foreignKeys.Count == 0)
-        //                {
-        //                    query = QueryBuilder.SelectQueryBuilder(table,page);
-        //                }
-        //                else
-        //                {
-        //                    query = QueryBuilder.JoinQueryBuilder(table,page);
-        //                }
-        //                ExecuteQuery(table, myAccessConn, schema, query);
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    return schema;
-        //}
-
-        //for primary key
-        //public static void AddPrimaryKeys(OdbcConnection myAccessConn, DatabaseSchema schema, String tblname)
-        //{
-        //    // string ConnectionString = "Provider=PGNP.1;Data Source=localhost;User ID=postgres;Location=SFConnector_Trunk;password=admin123";
-        //    // using (OleDbConnection myAccessConn1 = new OleDbConnection(ConnectionString))
-
-        //    try
-        //    {
-        //        myAccessConn.Open();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Console.Write(e.Message);
-        //    }
-        //    foreach (var tbl in schema.tables)
-        //    {
-        //        if (tbl.table_name == tblname)
-        //        {
-                    
-        //            DatabaseSchema pschema = new DatabaseSchema();
-        //            string query = "SELECT k.column_name AS pk_Column_Name FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING(constraint_name,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_name= \'" + tblname + "\'";
-        //            try
-        //            {
-        //                pschema.dataset = new DataSet();
-        //                ExecuteQuery(tblname, myAccessConn, pschema, query);
-        //            }
-        //            catch (Exception e)
-        //            {
-        //                Console.Write(e.Message);
-        //            }
-
-
-        //            //tbl.primaryKey = pschema.dataset.Tables[tblname].Rows.ToString();
-
-        //            foreach (DataRow dr in pschema.dataset.Tables[tblname].Rows)
-        //            {
-        //                tbl.primaryKey = dr["pK_COLUMN_NAME"].ToString();
-        //            }
-
-        //            break;
-        //        }
-        //    }
-
-        //}
-
-
-        //for foreign keys
-        public static void AddKeys(OdbcConnection myAccessConn,DatabaseSchema schema, String tblname)
+        public static void BuildDeleteDataset(String tblname, string id)
         {
-           // string ConnectionString = "Provider=PGNP.1;Data Source=localhost;User ID=postgres;Location=SFConnector_Trunk;password=admin123";
-           // using (OleDbConnection myAccessConn1 = new OleDbConnection(ConnectionString))
-            
-                try
-                {
-                    myAccessConn.Open();
-                }
-                catch (Exception e)
-                {
-                    Console.Write(e.Message);
-                }
-                foreach (var tbl in schema.tables)
-                {
-                    if (tbl.table_name == tblname)
-                    {
-                        //OdbcConnection connection = new OdbcConnection();
-                        //DataTable dt = myAccessConn.GetSchema("Indexes", new[] {schema.database, null, tblname });
-                        //DataSet db = new DataSet();
-                        DatabaseSchema fschema = new DatabaseSchema();
-                        string query = "SELECT  kcu.column_name As FK_COLUMN_NAME, ccu.table_name As PK_TABLE_NAME,ccu.column_name As pK_COLUMN_NAME FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name =\'" + tblname+"\'";
-                    try
-                    {
-                        fschema.dataset=new DataSet();
-                        ExecuteQuery(tblname, myAccessConn, fschema, query);
-                    }
-                    catch(Exception e)
-                    {
-                        Console.Write(e.Message);
-                    }
-                        //OdbcDataReader dr = ;
-                        //dr.GetSchemaTable();
-                        //           var dtt = myAccessConn1.GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new string[] { null, null, tbl.table_name });
-                        //foreach (DataRow dr in dtt.Rows)
-                        //{
-                        //    tbl.primaryKey = dr["COLUMN_NAME"].ToString();
-                        //}
-                        //var dtf = myAccessConn1.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new string[] { null, null, null, null, null, tbl.table_name });
-                        tbl.foreignKeys = new List<ForeignKey>();
+            DatabaseSchema schema = JsonReader.Read();
+            schema.dataset = new DataSet();
 
-                        foreach (DataRow dr in fschema.dataset.Tables[tblname].Rows)
-                        {
+            if (!String.IsNullOrEmpty(tblname))
+            {
 
-                            ForeignKey fitem = new ForeignKey();
-                            fitem.fk_name = dr["FK_COLUMN_NAME"].ToString();
-                            fitem.fk_table = dr["PK_TABLE_NAME"].ToString();
-                            fitem.pk_name = dr["pK_COLUMN_NAME"].ToString();
-                            tbl.foreignKeys.Add(fitem);
-                        }
+                OdbcConnection myAccessConn = EstablishConnection(schema);
+
+                foreach (var table in schema.tables)
+                {
+                    if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
+                    {
+                        AddKeys(myAccessConn, schema, table.table_name);
+                        getColumnType(myAccessConn, schema, table.table_name);
+
+                        string query = "";
+
+                        query = QueryBuilder.DeleteQueryBuilder(table, id);
+                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
+
                         break;
                     }
                 }
+            }
+        }//Build Delete Data Set
+
+        //To Add foreign keys
+        public static void AddKeys(OdbcConnection myAccessConn,DatabaseSchema schema, String tblname)
+        {
+             try
+             {
+                 myAccessConn.Open();
+             }
+             catch (Exception e)
+             {
+                 Console.Write(e.Message);
+             }
+             foreach (var tbl in schema.tables)
+             {
+                 if (tbl.table_name == tblname)
+                 {
+                      DatabaseSchema fschema = new DatabaseSchema();
+                      string query = "SELECT  kcu.column_name As FK_COLUMN_NAME, ccu.table_name As PK_TABLE_NAME,ccu.column_name As pK_COLUMN_NAME FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name =\'" + tblname+"\'";
+                      try
+                      {
+                           fschema.dataset=new DataSet();
+                           ExecuteQuery(tblname, myAccessConn, fschema, query);
+                      }
+                      catch(Exception e)
+                      {
+                           Console.Write(e.Message);
+                      }
+                      tbl.foreignKeys = new List<ForeignKey>();
+
+                      foreach (DataRow dr in fschema.dataset.Tables[tblname].Rows)
+                      {
+                          ForeignKey fitem = new ForeignKey();
+                          fitem.fk_name = dr["FK_COLUMN_NAME"].ToString();
+                          fitem.fk_table = dr["PK_TABLE_NAME"].ToString();
+                          fitem.pk_name = dr["pK_COLUMN_NAME"].ToString();
+                          tbl.foreignKeys.Add(fitem);
+                      }
+                      break;
+                 }
+            }
             
-        }
-
-    
-    //public static void AddKeys(OleDbConnection myAccessConn, DatabaseSchema schema,String tblname) 
-    //{
-    //    try
-    //    {
-    //        myAccessConn.Open();
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        Console.Write(e.Message);
-    //    }
-    //    foreach (var tbl in schema.tables)
-    //    {
-    //        if (tbl.table_name == tblname)
-    //        {
-    //            //OdbcConnection connection = new OdbcConnection();
-
-
-    //            var dtt = myAccessConn.GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new string[] { null, null, tbl.table_name });
-    //            foreach (DataRow dr in dtt.Rows)
-    //            {
-    //                tbl.primaryKey = dr["COLUMN_NAME"].ToString();
-    //            }
-    //            var dtf = myAccessConn.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new string[] { null, null, null, null, null, tbl.table_name });
-    //            tbl.foreignKeys = new List<ForeignKey>();
-    //            foreach (DataRow dr in dtf.Rows)
-    //            {
-
-    //                ForeignKey fitem = new ForeignKey();
-    //                fitem.fk_name = dr["FK_COLUMN_NAME"].ToString();
-    //                fitem.fk_table = dr["PK_TABLE_NAME"].ToString();
-    //                fitem.pk_name = dr["pK_COLUMN_NAME"].ToString();
-    //                tbl.foreignKeys.Add(fitem);
-    //            }
-    //        }
-    //    }
-    //    myAccessConn.Close();
-    //}
-    public static string getPrimaryKey(Table tbl)
+        }//AddKeys
+        
+        public static string getPrimaryKey(Table tbl)
         {
             return tbl.primaryKey.pk_name;
-        }
+        }// getPrimary Keys
 
         public static Table getTableFromName(string tableName,DatabaseSchema schema)
         {
@@ -422,6 +281,7 @@ namespace StarfishProject.Helpers
             }
             return null;
         }
+
         public static ForeignKey getForeignKey(Table current,string reffered)
         {
             foreach(var fkey in current.foreignKeys)
@@ -431,6 +291,7 @@ namespace StarfishProject.Helpers
             }
             return null;
         }
+
         public static void getColumnType(OdbcConnection myAccessConn, DatabaseSchema schema, String tblname)
         {
 
@@ -469,79 +330,107 @@ namespace StarfishProject.Helpers
             {
                 Console.Write(e.Message);
             }
+        }// Get Column Type
+
+        //new add
+        public static void InsertRow(List<SearchBox> AddElement, Table tbl)
+        {
+            string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
+            OdbcConnection myAccessConn = null;
+            try
+            {
+                myAccessConn = new OdbcConnection(ConnectionString);
+
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: Failed to create a database connection. \n{0}", ex.Message);
+
+            }
+
+            string query = QueryBuilder.InsertRowQuery(AddElement, tbl);
+            ExecuteInsertCmd(myAccessConn, query);
+
+
 
         }
-        public static DatabaseSchema BuildSortDataset(String tblname, string ColumnName, int page, List<SearchBox> SearchElement)
+        public static void addDataForDropdown(DatabaseSchema dbs, Table table)
         {
-             DatabaseSchema schema = JsonReader.Read();
-            schema.dataset = new DataSet();
-
-            if (!String.IsNullOrEmpty(tblname))
+            if (table.foreignKeys != null)
             {
+                OdbcConnection myAccessConn = EstablishConnection(dbs);
 
-                OdbcConnection myAccessConn = EstablishConnection(schema);
-
-                foreach (var table in schema.tables)
+                foreach (Column col in table.columns)
                 {
-                    if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
+                    if (col.referred_table != null)
                     {
-                        AddKeys(myAccessConn, schema, table.table_name);
-                        string query = "";
-                        //  string countquery = "";
+                        Table tbl = getTableFromName(col.referred_table, dbs);
+                        string pk = getPrimaryKey(tbl);
+                        string localaquery = "select distinct " +pk+" , "+ col.column_name + " from " + col.referred_table;
+                        ExecuteQuery(col.column_name, myAccessConn, dbs, localaquery);
 
-                        if (table.foreignKeys.Count == 0)
-                        {
-                            query = QueryBuilder.SortQueryBuilder(table, ColumnName, page, SearchElement);
-                        }
-                        else
-                        {
-                            query = QueryBuilder.JoinSortQueryBuilder(table, ColumnName, page, SearchElement);
-                        }
-                        //  countquery = QueryBuilder.BuildCountQuery(query);
-                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
-                        //  ExecuteQuery("count", myAccessConn, schema, countquery);
-                        break;
                     }
+                }
+
+
+            }
+        }
+
+        public static void ExecuteInsertCmd(OdbcConnection myAccessConn, string query)
+        {
+            OdbcCommand cmd = new OdbcCommand(query);
+            OdbcTransaction transaction = null;
+            cmd.Connection = myAccessConn;
+            try
+            {
+                myAccessConn.Open();
+
+                // Start a local transaction
+                transaction = myAccessConn.BeginTransaction();
+
+                // Assign transaction object for a pending local transaction.
+
+                cmd.Transaction = transaction;
+
+                // Execute the commands.
+
+                cmd.ExecuteNonQuery();
+
+                // Commit the transaction.
+                transaction.Commit();
+
+            }
+            catch { }
+        }
+
+        public static DatabaseSchema getAllColumnInfo(Table table)
+        {
+            DatabaseSchema colschema = JsonReader.Read();
+            colschema.dataset = new DataSet();
+            DataTable dt = new DataTable();
+            OdbcConnection myAccessConn = EstablishConnection(colschema);
+            foreach (Table tbl in colschema.tables)
+            {
+                if (tbl.table_name == table.table_name)
+                {
+                    try
+                    {
+                        myAccessConn.Open();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    foreach (var col in tbl.columns)
+                    {
+                        dt.Merge(myAccessConn.GetSchema("Columns", new string[] { null, null, table.table_name, col.column_name }));
+                    }
+                    break;
                 }
             }
-            return schema;
-        }
-
-        public static void BuildDeleteDataset(String tblname,string id)
-        {
-            DatabaseSchema schema = JsonReader.Read();
-            schema.dataset = new DataSet();
-
-            if (!String.IsNullOrEmpty(tblname))
-            {
-
-                OdbcConnection myAccessConn = EstablishConnection(schema);
-
-                foreach (var table in schema.tables)
-                {
-                    if (table.table_name.ToLower().Equals(tblname.ToLower()) || table.table_display_name.ToLower().Equals(tblname.ToLower()))
-                    {
-                        AddKeys(myAccessConn, schema, table.table_name);
-                        getColumnType(myAccessConn, schema, table.table_name);
-                        
-                        string query = "";
-                        //  string countquery = "";
-
-                        //if (table.foreignKeys.Count == 0)
-                       // {
-                            query = QueryBuilder.DeleteQueryBuilder(table,id);
-                        //}
-                        //else
-                        //{
-                        //    query = QueryBuilder.JoinDeleteQueryBuilder(table,id);
-                        //}
-                        //  countquery = QueryBuilder.BuildCountQuery(query);
-                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
-                        //  ExecuteQuery("count", myAccessConn, schema, countquery);
-                        break;
-                    }
-                }
-            }           
+            colschema.dataset.Tables.Add(dt);
+            return colschema;
         }
 
     }

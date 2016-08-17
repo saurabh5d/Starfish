@@ -1,0 +1,87 @@
+﻿@using StarfishProject.Helpers;
+@using System.Data;
+@{
+    ViewBag.Title = "Add";
+}
+@{
+    var dbs = (DatabaseSchema)ViewData["DatabaseSchema"];
+    var tbl = (Table)ViewData["CurrentTable"];
+}
+@model DatabaseSchema
+@{
+    using (Html.BeginForm("Insert", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <div class="table" style="align-content:center;padding-top:10em;padding-left:10em">
+            <table id="table" class="table" border="0" style="align-content:center;">
+
+            @foreach (var col in tbl.columns)
+            {
+                 <tr style="border:hidden">
+
+                 @if (col.referred_table != null)
+                 {
+
+                    <td>@col.display_name:</td>
+                    List<SelectListItem> list = new List<SelectListItem>();
+
+                    foreach (DataRow row in Model.dataset.Tables[col.column_name].Rows)
+                    {
+                        list.Add(new SelectListItem()
+                        {
+                            Text = row[col.column_name].ToString(),
+                            Value = row[0].ToString()
+                         });
+                     }
+                     <td> @Html.DropDownList(col.column_name, new SelectList(list, "Value", "Text"), new { @class = "form-control" })</td>
+
+                 }
+                 else
+                 {
+                     foreach (DataRow dr in Model.dataset.Tables["Table1"].Rows)
+                     {
+                          if (!dr["COLUMN_NAME"].ToString().Equals(col.column_name))
+                          {
+                             continue;
+                          }
+                          if (col.data_type == "bool")
+                          {
+                               <td>@col.display_name:</td>
+                               <td>
+                               @*Html.CheckBox(col.column_name) *@
+                                    <input type="checkbox" name=@dr["COLUMN_NAME"].ToString() value="True" />
+                                    <input name=@dr["COLUMN_NAME"].ToString() type="hidden" value="false" />
+                               </td>
+                          }
+                          else
+                          {
+                               if (dr["TYPE_NAME"].ToString() == "timestamptz")
+                               {
+                                    <td>@col.display_name:</td>
+                                    <td>
+                                     @{
+                                         <input type="text" id="timestamp" name=@dr["COLUMN_NAME"].ToString() />
+                                      }
+                                      </td>
+                                }
+                                else
+                                {
+                                     <td>@col.display_name:</td>
+                                     <td>  <input type="text" name=@dr["COLUMN_NAME"].ToString()> </td>
+                                 }
+                          }
+                   }
+                }
+
+                </tr>
+            }
+            </table>
+            <input class="btn btn-primary" type="submit" value="Add" id="search" />
+        </div>
+    }
+}
+
+<script>
+    $(function () {
+        $("#timestamp").datepicker();
+    });
+</script>
