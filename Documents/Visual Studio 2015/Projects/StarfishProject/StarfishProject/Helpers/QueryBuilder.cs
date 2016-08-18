@@ -95,7 +95,7 @@ namespace StarfishProject.Helpers
                             break;
                         }
                         else
-                            str.Append(element.column_name + " like '%" + element.value + "%' AND ");
+                            str.Append(" UPPER ("+element.column_name + ") like '%" + element.value.ToUpper() + "%' AND ");
                         break;
                     }
             }
@@ -136,7 +136,7 @@ namespace StarfishProject.Helpers
                                 break;
                             }
                             else
-                                str.Append(ref_tbl + "." + element.column_name + " like '%" + element.value + "%' AND ");
+                                str.Append(" UPPER(" +ref_tbl + "." + element.column_name + ") like '%" + element.value.ToUpper() + "%' AND ");
                             break;
 
                         }
@@ -187,6 +187,19 @@ namespace StarfishProject.Helpers
 
         }
 
+        public static string EditQueryBuilder(Table tbl, string id)
+        {
+            StringBuilder str = new StringBuilder("select * ");
+            /*foreach (Column col in tbl.columns)
+                str.Append(col.column_name + ",");
+
+            str.Remove(str.Length - 1, 1);*/
+            str.Append(" from " + tbl.table_name);
+            var pkey = DatabaseManager.getPrimaryKey(tbl);
+            str.Append(" where " + pkey + " = cast( " + id + " as " + tbl.primaryKey.pk_data_type + " )");
+            return str.ToString();
+        }
+
         public static string DeleteQueryBuilder(Table tbl,string id)
         {
             StringBuilder str = new StringBuilder("DELETE ");
@@ -229,6 +242,20 @@ namespace StarfishProject.Helpers
             cols.Append(")");
             values.Append(")");
             str.Append(" " + cols + " values " + values + " ;");
+            return str.ToString();
+        }
+
+        public static string UpdateRowQuery(List<SearchBox> AddElement, Table tbl,string id)
+        {
+            StringBuilder str = new StringBuilder("update " + tbl.table_name + " set ");
+
+            foreach (var element in AddElement)
+            {
+                str.Append(element.column_name + "=" + "'" + element.value + "' ,");
+            }
+            str.Remove(str.Length - 1, 1);
+            str.Append(" where "+tbl.primaryKey.pk_name + " = cast( " + id + " as " + tbl.primaryKey.pk_data_type + " )");
+
             return str.ToString();
         }
 

@@ -1,0 +1,152 @@
+﻿@using StarfishProject.Helpers;
+@using System.Data;
+@{
+    ViewBag.Title = "Edit";
+}
+@{
+    var dbs = (DatabaseSchema)ViewData["DatabaseSchema"];
+    var tbl = (Table)ViewData["TableData"];
+}
+@model DatabaseSchema
+
+    @using (Html.BeginForm("Update", "Automate", new { id = Model.dataset.Tables[tbl.table_name].Rows[0][tbl.primaryKey.pk_name].ToString() }, FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <div class="table" style="align-content:center;padding-top:10em;padding-left:10em">
+
+            <table id="table" class="table" border="0" style="align-content:center;">
+
+                @foreach (var col in tbl.columns)
+                {
+                    <tr style="border:hidden">
+
+                        @if (col.referred_table != null)
+                        {
+
+                            <td>@col.display_name:</td>
+
+                            List<SelectListItem> list = new List<SelectListItem>();
+                            if (col.is_editable == "false")
+                            {
+                                DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+                                Html.Label(row[col.column_name].ToString());
+                            }
+                            else
+                            {
+                                string default1 = "";
+
+                                foreach (ForeignKey key in tbl.foreignKeys)
+                                {
+                                    if (key.fk_table == col.referred_table)
+                                    {
+                                        default1 = key.fk_name;
+                                    }
+                                }
+                                foreach (DataRow row in Model.dataset.Tables[col.column_name].Rows)
+                                {
+
+                                    if (row[0].ToString() == Model.dataset.Tables[tbl.table_name].Rows[0][default1].ToString())
+                                    {
+                                        list.Insert(0, new SelectListItem()
+                                        {
+                                            Text = row[col.column_name].ToString(),
+                                            Value = row[0].ToString()
+
+                                        });
+                                        continue;
+                                    }
+                                    list.Add(new SelectListItem()
+                                    {
+                                        Text = row[col.column_name].ToString(),
+                                        Value = row[0].ToString()
+
+                                    });
+
+                                }
+                                <td> @Html.DropDownList(col.column_name, new SelectList(list, "Value", "Text"), new { @class = "form-control" })</td>
+                            }
+                        }
+                        else
+                        {
+                            if (col.data_type == "bool")
+                            {
+                                <td>@col.display_name:</td>
+                                if (col.is_editable == "false")
+                                {
+                                    DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+                                    if (row[col.column_name].ToString() == "0")
+                                    {
+                                        <td> <input type="checkbox" name=@col.column_name disabled="disabled" value="" /> </td>
+                                    }
+                                    if (row[col.column_name].ToString() == "1")
+                                    {
+                                        <td> <input type="checkbox" name=@col.column_name disabled="disabled" checked="checked" value="" /> </td>
+                                    }
+                                }
+                                else
+                                {
+                                    <td>
+                                        @*Html.CheckBox(col.column_name) *@
+                                        <input type="checkbox" name=@col.column_name value="True" />
+                                        <input name=@col.column_name type="hidden" value="false" />
+                                    </td>
+                                }
+                            }
+                            else
+                            {
+                                if (col.data_type == "timestamptz")
+                                {
+                                    <td>@col.display_name:</td>
+                                    if (col.is_editable == "false")
+                                    {
+                                        DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+                                        <td><input type="text" value=@row[col.column_name].ToString() /></td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            @{
+                                                DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+                                                <input type="text" id="timestamp" name=@col.column_name value=@row[col.column_name].ToString() />
+                                            }
+                                        </td>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <td>@col.display_name:</td>
+                                                    if (col.is_editable == "false")
+                                                    {
+                                                        DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+
+                                                        <td>@Html.Label(row[col.column_name].ToString())</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
+
+                                                        <td>
+                                                            @*<input type="text" name=@col.column_name value=row[col.column_name].ToString();>*@
+                                                            @Html.TextBox(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px" })
+                                                        </td>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                    </tr>
+                    <tr>
+
+                    </tr>
+                                                }
+            </table>
+            <input class="btn btn-primary" type="submit" value="Update" />
+        </div>
+    }
+
+
+<script>
+    $(function () {
+        $("#timestamp").datepicker();
+    });
+</script>
+

@@ -19,12 +19,18 @@ namespace StarfishProject.Controllers
 
             DatabaseSchema dbs = DatabaseManager.BuildDataset();
             ViewData["DatabaseSchema"] = dbs;
-            return View();
+            var tbl = dbs.tables[0];
+            return RedirectToAction("GetTable", "Automate", new { TableName = tbl.table_name});
         }
 
         public ActionResult GetTable(string TableName,int? page)
         {
             int page1 = page ?? default(int);
+
+            if (page1 != 0)
+                page1 = page1 - 1;
+
+            Session["page"] = page;
 
             var dbs = DatabaseManager.BuildDataset(TableName,page1);
 
@@ -65,6 +71,7 @@ namespace StarfishProject.Controllers
         public ActionResult Search(string Table, int? page)
         {
             int page1 = page ?? default(int);
+
             List<SearchBox> SearchElement = new List<SearchBox>();
            var table= Session["CurrentTable"] as Table;
             
@@ -107,6 +114,11 @@ namespace StarfishProject.Controllers
             var table = Session["CurrentTable"] as Table;
             int page1 = page ?? default(int);
 
+            if (page1 != 0 )
+                page1 = page1 - 1;
+
+            Session["page"] = page;
+
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
 
             var dbs=DatabaseManager.BuildDatasetForSearch(table, SearchElement, page1);
@@ -121,6 +133,7 @@ namespace StarfishProject.Controllers
             StaticPagedList<DataRow> data = new StaticPagedList<DataRow>(trows, page ?? 1, 15, rowcount);
             return View(data);
         }
+
         public ActionResult SortColumn(string TableName, string ColumnName, int? page)
         {
             var table = Session["CurrentTable"] as Table;
@@ -134,6 +147,9 @@ namespace StarfishProject.Controllers
             else
                 ColumnName = Session["ColumnName"] as string;
             int page1 = page ?? default(int);
+
+            if (page1 != 0)
+                page1 = page1 - 1;
 
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
             var dbs = DatabaseManager.BuildSortDataset(table.table_name, ColumnName, page1, SearchElement);
@@ -156,24 +172,29 @@ namespace StarfishProject.Controllers
         {
             var table = Session["CurrentTable"] as Table;
 
-            DatabaseManager.BuildDeleteDataset(table.table_name, id);
+            var dbs = DatabaseManager.BuildEditDataset(table.table_name, id);
 
-            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+            ViewData["DatabaseSchema"] = dbs;
+            ViewData["TableData"] = table;
+
+            return View(dbs);
         }
 
         //Delete
         public ActionResult Delete(string TableName, string id)
         {
             var table = Session["CurrentTable"] as Table;
-          
+
+            int? page = Session["page"] as int?;
+
             DatabaseManager.BuildDeleteDataset(table.table_name,id);
 
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
 
             if(SearchElement == null)
-                return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+                return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name ,page });
             else
-                return RedirectToAction("Search", "Automate", new { TableName = table.table_name });
+                return RedirectToAction("Search", "Automate", new { TableName = table.table_name, page });
         }
 
         //add
@@ -212,7 +233,7 @@ namespace StarfishProject.Controllers
             AddElement.Add(sbox);
             }
             DatabaseManager.InsertRow(AddElement, table);
-            return RedirectToAction("Index");
+            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
         }
 
         public ActionResult Add(string TableName)
@@ -224,6 +245,43 @@ namespace StarfishProject.Controllers
             ViewData["CurrentTable"] = table;
 
             return View(dbs);
+        }
+        public ActionResult Update(string id)
+        {
+            var table = Session["CurrentTable"] as Table;
+            List<SearchBox> AddElement = new List<SearchBox>();
+            foreach (var col in table.columns)
+            {
+                SearchBox sbox = new SearchBox();
+                try
+                {
+
+                    sbox.value = Request.Form[col.column_name].ToString();
+
+                }
+                catch { }
+                if (sbox.value == null || sbox.value == "")
+                    continue;
+                if (col.referred_table == null)
+                {
+                    sbox.column_name = col.column_name;
+                }
+
+                else
+                {
+                    foreach (ForeignKey fkey in table.foreignKeys)
+                    {
+                        if (fkey.fk_table == col.referred_table)
+                        {
+                            sbox.column_name = fkey.fk_name;
+                            break;
+                        }
+                    }
+                }
+                AddElement.Add(sbox);
+            }
+            DatabaseManager.UpdateRow(AddElement, table,id);
+            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
         }
     }
 }
