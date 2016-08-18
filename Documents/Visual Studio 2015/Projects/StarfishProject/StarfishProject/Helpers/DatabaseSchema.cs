@@ -266,7 +266,41 @@ namespace StarfishProject.Helpers
             }
             
         }//AddKeys
-        
+
+        //for primary key
+        public static string AddPrimaryKeys(OdbcConnection myAccessConn, DatabaseSchema schema, String tblname)
+        {
+            try
+            {
+                myAccessConn.Open();
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+            }
+            
+            DatabaseSchema pschema = new DatabaseSchema();
+            string query = "SELECT k.column_name AS pk_Column_Name FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING(constraint_name,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_name= \'" + tblname + "\'";
+            try
+            {
+                pschema.dataset = new DataSet();
+                ExecuteQuery(tblname, myAccessConn, pschema, query);
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+            }
+            string pk="";
+
+            //tbl.primaryKey = pschema.dataset.Tables[tblname].Rows.ToString();
+
+            foreach (DataRow dr in pschema.dataset.Tables[tblname].Rows)
+            {
+                pk =  dr["pk_Column_Name"].ToString();
+            }
+            return pk;
+        }
+
         public static string getPrimaryKey(Table tbl)
         {
             return tbl.primaryKey.pk_name;
@@ -277,7 +311,9 @@ namespace StarfishProject.Helpers
             foreach(var table in schema.tables)
             {
                 if (table.table_name == tableName)
+                {
                     return table;
+                }
             }
             return null;
         }
@@ -357,6 +393,7 @@ namespace StarfishProject.Helpers
         }
         public static void addDataForDropdown(DatabaseSchema dbs, Table table)
         {
+            string pk="";
             if (table.foreignKeys != null)
             {
                 OdbcConnection myAccessConn = EstablishConnection(dbs);
@@ -366,7 +403,10 @@ namespace StarfishProject.Helpers
                     if (col.referred_table != null)
                     {
                         Table tbl = getTableFromName(col.referred_table, dbs);
-                        string pk = getPrimaryKey(tbl);
+                        if (tbl == null)
+                            pk = AddPrimaryKeys(myAccessConn, dbs , table.table_name);
+                        else 
+                             pk = getPrimaryKey(tbl);
                         string localaquery = "select distinct " +pk+" , "+ col.column_name + " from " + col.referred_table;
                         ExecuteQuery(col.column_name, myAccessConn, dbs, localaquery);
 
