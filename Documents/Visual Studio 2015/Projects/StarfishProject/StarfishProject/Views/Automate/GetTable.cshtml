@@ -22,6 +22,11 @@
 
 </head>
 
+@if (TempData["msg"] != null)
+{
+  @Html.Raw(TempData["msg"]);
+}
+
 @{
     using (Html.BeginForm("Search", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
@@ -58,6 +63,7 @@
                     @for (int i = 1; i < dr.ItemArray.Count(); i++)
                     {
                         <td>@dr[i]</td>
+                        
                     }
                     <td>
                         @Html.ActionLink("Edit", "Edit", "Automate", new { TableName = tbl.table_name, id = dr[0] }, null) &nbsp;

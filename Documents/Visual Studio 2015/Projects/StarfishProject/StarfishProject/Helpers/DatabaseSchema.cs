@@ -225,11 +225,11 @@ namespace StarfishProject.Helpers
             return schema;
         }
 
-        public static void BuildDeleteDataset(String tblname, string id)
+        public static int BuildDeleteDataset(String tblname, string id)
         {
             DatabaseSchema schema = JsonReader.Read();
             schema.dataset = new DataSet();
-
+            int i = 0;
             if (!String.IsNullOrEmpty(tblname))
             {
 
@@ -245,12 +245,13 @@ namespace StarfishProject.Helpers
                         string query = "";
 
                         query = QueryBuilder.DeleteQueryBuilder(table, id);
-                        ExecuteQuery(table.table_name, myAccessConn, schema, query);
+                        i = ExecuteCmd( myAccessConn, query);
 
                         break;
                     }
                 }
             }
+            return i;
         }//Build Delete Data Set
 
         //To Add foreign keys
@@ -397,8 +398,9 @@ namespace StarfishProject.Helpers
         }// Get Column Type
 
         //new add
-        public static void InsertRow(List<SearchBox> AddElement, Table tbl)
+        public static int InsertRow(List<SearchBox> AddElement, Table tbl)
         {
+            int i = 0;
             string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
             OdbcConnection myAccessConn = null;
             try
@@ -414,9 +416,9 @@ namespace StarfishProject.Helpers
             }
 
             string query = QueryBuilder.InsertRowQuery(AddElement, tbl);
-            ExecuteCmd(myAccessConn, query);
+            i = ExecuteCmd(myAccessConn, query);
 
-
+            return i;
 
         }
         public static void addDataForDropdown(DatabaseSchema dbs, Table table)
@@ -445,11 +447,12 @@ namespace StarfishProject.Helpers
             }
         }
 
-        public static void ExecuteCmd(OdbcConnection myAccessConn, string query)
+        public static int ExecuteCmd(OdbcConnection myAccessConn, string query)
         {
             OdbcCommand cmd = new OdbcCommand(query);
             OdbcTransaction transaction = null;
             cmd.Connection = myAccessConn;
+            int i=0;
             try
             {
                 myAccessConn.Open();
@@ -463,13 +466,16 @@ namespace StarfishProject.Helpers
 
                 // Execute the commands.
 
-                cmd.ExecuteNonQuery();
+                i = cmd.ExecuteNonQuery();
 
                 // Commit the transaction.
                 transaction.Commit();
 
+                
             }
             catch { }
+
+            return i;
         }
 
         public static DatabaseSchema getAllColumnInfo(Table table)
@@ -501,8 +507,9 @@ namespace StarfishProject.Helpers
             return colschema;
         }
 
-        public static void UpdateRow(List<SearchBox> AddElement, Table tbl,string id)
+        public static int UpdateRow(List<SearchBox> AddElement, Table tbl,string id)
         {
+            int i = 0;
             string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
             OdbcConnection myAccessConn = null;
             try
@@ -518,10 +525,9 @@ namespace StarfishProject.Helpers
             }
 
             string query = QueryBuilder.UpdateRowQuery(AddElement, tbl,id);
-            ExecuteCmd(myAccessConn, query);
+            i = ExecuteCmd(myAccessConn, query);
 
-
-
+            return i;
         }
     }
 }

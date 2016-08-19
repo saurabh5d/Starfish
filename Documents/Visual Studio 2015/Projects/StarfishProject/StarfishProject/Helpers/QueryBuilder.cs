@@ -89,9 +89,9 @@ namespace StarfishProject.Helpers
                             str.Append(element.column_name + "=" + element.value + " AND ");
                             break;
                         }
-                        if (col.data_type != "varchar")
+                        if (col.data_type != "varchar" && col.data_type != "text" && col.data_type != "char")
                         {
-                            str.Append("CAST(" + element.column_name + "as varchar)" + "=" + element.value + " AND ");
+                            str.Append("CAST(" + element.column_name + " as varchar)" + " = " + element.value + " AND ");
                             break;
                         }
                         else

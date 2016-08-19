@@ -16,7 +16,6 @@ namespace StarfishProject.Controllers
         // GET: Automate
         public ActionResult Index()
         {
-
             DatabaseSchema dbs = DatabaseManager.BuildDataset();
             ViewData["DatabaseSchema"] = dbs;
             var tbl = dbs.tables[0];
@@ -187,7 +186,17 @@ namespace StarfishProject.Controllers
 
             int? page = Session["page"] as int?;
 
-            DatabaseManager.BuildDeleteDataset(table.table_name,id);
+            int i = DatabaseManager.BuildDeleteDataset(table.table_name,id);
+
+            if (i == 1)
+            {
+                TempData["msg"] = "<script>alert('Deleted succesfully');</script>";
+                
+            }
+            else
+            {
+                TempData["msg"] = "<script>alert('Not Deleted');</script>";
+            }
 
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
 
@@ -232,7 +241,17 @@ namespace StarfishProject.Controllers
                 }
             AddElement.Add(sbox);
             }
-            DatabaseManager.InsertRow(AddElement, table);
+            int i = DatabaseManager.InsertRow(AddElement, table);
+            if (i == 1)
+            {
+                TempData["msg"] = "<script>alert('Inserted succesfully');</script>";
+
+            }
+            else
+            {
+                TempData["msg"] = "<script>alert('Not Inserted');</script>";
+            }
+
             return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
         }
 
@@ -250,6 +269,9 @@ namespace StarfishProject.Controllers
         {
             var table = Session["CurrentTable"] as Table;
             List<SearchBox> AddElement = new List<SearchBox>();
+
+            int? page = Session["page"] as int?;
+
             foreach (var col in table.columns)
             {
                 SearchBox sbox = new SearchBox();
@@ -280,8 +302,18 @@ namespace StarfishProject.Controllers
                 }
                 AddElement.Add(sbox);
             }
-            DatabaseManager.UpdateRow(AddElement, table,id);
-            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+            int i = DatabaseManager.UpdateRow(AddElement, table,id);
+            if (i == 1)
+            {
+                TempData["msg"] = "<script>alert('Updated succesfully');</script>";
+
+            }
+            else
+            {
+                TempData["msg"] = "<script>alert('Not Updated');</script>";
+            }
+
+            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name ,page });
         }
     }
 }
