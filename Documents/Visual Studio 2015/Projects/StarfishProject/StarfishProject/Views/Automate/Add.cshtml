@@ -76,6 +76,7 @@
             }
             </table>
             <input class="btn btn-primary" type="submit" value="Add" id="search" />
+            @Html.ActionLink("Cancel", "GetTable", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" })
         </div>
     }
 }

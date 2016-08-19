@@ -251,8 +251,14 @@ namespace StarfishProject.Controllers
             {
                 TempData["msg"] = "<script>alert('Not Inserted');</script>";
             }
+            var SearchElement = Session["SearchElement"] as List<SearchBox>;
 
-            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name });
+            int? page = Session["page"] as int?;
+
+            if (SearchElement == null)
+                return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name, page });
+            else
+                return RedirectToAction("Search", "Automate", new { TableName = table.table_name, page });
         }
 
         public ActionResult Add(string TableName)
@@ -313,7 +319,15 @@ namespace StarfishProject.Controllers
                 TempData["msg"] = "<script>alert('Not Updated');</script>";
             }
 
-            return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name ,page });
+            var SearchElement = Session["SearchElement"] as List<SearchBox>;
+            
+
+            if (SearchElement == null)
+                return RedirectToAction("GetTable", "Automate", new { TableName = table.table_name, page });
+            else
+                return RedirectToAction("Search", "Automate", new { TableName = table.table_name, page });
+
+            
         }
     }
 }

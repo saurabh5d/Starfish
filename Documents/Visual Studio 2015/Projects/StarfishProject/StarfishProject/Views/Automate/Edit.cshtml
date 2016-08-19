@@ -126,11 +126,12 @@
 
                                                         <td>
                                                             @*<input type="text" name=@col.column_name value=row[col.column_name].ToString();>*@
-                                                            @Html.TextBox(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px" })
+                                                            @Html.TextArea(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px" })
                                                         </td>
                                                             }
                                                         }
                                                     }
+                                        
                                                 }
 
                     </tr>
@@ -140,6 +141,7 @@
                                                 }
             </table>
             <input class="btn btn-primary" type="submit" value="Update" />
+            @Html.ActionLink("Cancel", "GetTable", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" })
         </div>
     }
 
