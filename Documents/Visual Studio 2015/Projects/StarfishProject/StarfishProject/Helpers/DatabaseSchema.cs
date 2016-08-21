@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.Odbc;
 
@@ -50,7 +51,7 @@ namespace StarfishProject.Helpers
     {
         public static OdbcConnection EstablishConnection(DatabaseSchema dbs)
         {
-            string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
+            string ConnectionString = ConfigurationManager.AppSettings["ConnectionString"];
             OdbcConnection myAccessConn = null;
             try
             {
@@ -114,11 +115,11 @@ namespace StarfishProject.Helpers
                         string countquery = "";
                         if (table.foreignKeys.Count == 0)
                         {
-                            query = QueryBuilder.SelectQueryBuilder(table, page);
+                            query = QueryBuilder.SelectQueryBuilder(table, page,schema);
                         }
                         else
                         {
-                            query = QueryBuilder.JoinQueryBuilder(table, page);
+                            query = QueryBuilder.JoinQueryBuilder(table, page,schema);
                         }
                         countquery = QueryBuilder.BuildCountQuery(query);
                         ExecuteQuery(table.table_name, myAccessConn, schema, query);
@@ -146,11 +147,11 @@ namespace StarfishProject.Helpers
                     string countquery = "";
                     if (table.foreignKeys.Count == 0)
                     {
-                        query = QueryBuilder.BuildSearchQuery(table, searchElement, page);
+                        query = QueryBuilder.BuildSearchQuery(table, searchElement, page,schema);
                     }
                     else
                     {
-                        query = QueryBuilder.BuildJoinSearchQuery(table, searchElement, page);
+                        query = QueryBuilder.BuildJoinSearchQuery(table, searchElement, page,schema);
                     }
                     countquery = QueryBuilder.BuildCountQuery(query);
                     ExecuteQuery(table.table_name, myAccessConn, schema, query);
@@ -181,11 +182,11 @@ namespace StarfishProject.Helpers
                      
                         if (table.foreignKeys.Count == 0)
                         {
-                            query = QueryBuilder.SortQueryBuilder(table, ColumnName, page, SearchElement);
+                            query = QueryBuilder.SortQueryBuilder(table, ColumnName, page, SearchElement,schema);
                         }
                         else
                         {
-                            query = QueryBuilder.JoinSortQueryBuilder(table, ColumnName, page, SearchElement);
+                            query = QueryBuilder.JoinSortQueryBuilder(table, ColumnName, page, SearchElement,schema);
                         }
 
                         ExecuteQuery(table.table_name, myAccessConn, schema, query);
@@ -257,6 +258,7 @@ namespace StarfishProject.Helpers
         //To Add foreign keys
         public static void AddKeys(OdbcConnection myAccessConn,DatabaseSchema schema, String tblname)
         {
+            string query = "";
              try
              {
                  myAccessConn.Open();
@@ -270,7 +272,19 @@ namespace StarfishProject.Helpers
                  if (tbl.table_name == tblname)
                  {
                       DatabaseSchema fschema = new DatabaseSchema();
-                      string query = "SELECT  kcu.column_name As FK_COLUMN_NAME, ccu.table_name As PK_TABLE_NAME,ccu.column_name As pK_COLUMN_NAME FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name =\'" + tblname+"\'";
+                    if(schema.database == "MySQL")
+                    {
+                        query = "Select COLUMN_NAME as FK_COLUMN_NAME,REFERENCED_TABLE_NAME AS PK_TABLE_NAME,REFERENCED_COLUMN_NAME AS pK_COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE where CONSTRAINT_NAME not like \"%PRIMARY%\" and TABLE_NAME =\'" + tblname + "\'";
+                        
+                    }
+                    else if(schema.database=="SqlServer")
+                    {
+                        query = "SELECT col1.name AS [FK_COLUMN_NAME],tab2.name AS [PK_TABLE_NAME],col2.name AS [pK_COLUMN_NAME] FROM sys.foreign_key_columns fkc INNER JOIN sys.tables tab1 ON tab1.object_id = fkc.parent_object_id INNER JOIN sys.columns col1 ON col1.column_id = parent_column_id AND col1.object_id = tab1.object_id INNER JOIN sys.tables tab2 ON tab2.object_id = fkc.referenced_object_id INNER JOIN sys.columns col2 ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id where tab1.name =\'" + tblname + "\'";
+                    }
+                    else
+                    {
+                        query = "SELECT  kcu.column_name As FK_COLUMN_NAME, ccu.table_name As PK_TABLE_NAME,ccu.column_name As pK_COLUMN_NAME FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name =\'" + tblname + "\'";
+                    }  
                       try
                       {
                            fschema.dataset=new DataSet();
@@ -309,6 +323,7 @@ namespace StarfishProject.Helpers
             }
             
             DatabaseSchema pschema = new DatabaseSchema();
+
             string query = "SELECT k.column_name AS pk_Column_Name FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING(constraint_name,table_name) WHERE t.constraint_type='PRIMARY KEY' AND t.table_name= \'" + tblname + "\'";
             try
             {
@@ -401,7 +416,7 @@ namespace StarfishProject.Helpers
         public static int InsertRow(List<SearchBox> AddElement, Table tbl)
         {
             int i = 0;
-            string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
+            string ConnectionString = ConfigurationManager.AppSettings["ConnectionString"];
             OdbcConnection myAccessConn = null;
             try
             {
@@ -510,7 +525,7 @@ namespace StarfishProject.Helpers
         public static int UpdateRow(List<SearchBox> AddElement, Table tbl,string id)
         {
             int i = 0;
-            string ConnectionString = "Dsn=PostgreSQL30;uid=postgres";
+            string ConnectionString = ConfigurationManager.AppSettings["ConnectionString"];
             OdbcConnection myAccessConn = null;
             try
             {

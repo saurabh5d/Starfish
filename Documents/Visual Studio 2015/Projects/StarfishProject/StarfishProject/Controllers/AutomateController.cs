@@ -190,12 +190,12 @@ namespace StarfishProject.Controllers
 
             if (i == 1)
             {
-                TempData["msg"] = "<script>alert('Deleted succesfully');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-success\"" + ">Deleted Successfully!</ p > ";
                 
             }
             else
             {
-                TempData["msg"] = "<script>alert('Not Deleted');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-danger\"" + "> Delete Unsuccessful!</ p > ";
             }
 
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
@@ -218,6 +218,8 @@ namespace StarfishProject.Controllers
                 {
                     
                         sbox.value = Request.Form[col.column_name].ToString();
+                    if (sbox.value == "True,false")
+                        sbox.value = "True";
                     
                 }
                 catch { }
@@ -244,12 +246,12 @@ namespace StarfishProject.Controllers
             int i = DatabaseManager.InsertRow(AddElement, table);
             if (i == 1)
             {
-                TempData["msg"] = "<script>alert('Inserted succesfully');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-success\"" + ">Inserted succesfully!</ p > "; 
 
             }
             else
             {
-                TempData["msg"] = "<script>alert('Not Inserted');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-danger\"" + ">Not Inserted!</ p > ";
             }
             var SearchElement = Session["SearchElement"] as List<SearchBox>;
 
@@ -285,7 +287,8 @@ namespace StarfishProject.Controllers
                 {
 
                     sbox.value = Request.Form[col.column_name].ToString();
-
+                    if (sbox.value == "True,false")
+                        sbox.value = "True";
                 }
                 catch { }
                 if (sbox.value == null || sbox.value == "")
@@ -311,12 +314,12 @@ namespace StarfishProject.Controllers
             int i = DatabaseManager.UpdateRow(AddElement, table,id);
             if (i == 1)
             {
-                TempData["msg"] = "<script>alert('Updated succesfully');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-success\"" + ">Updated succesfully!</ p > ";
 
             }
             else
             {
-                TempData["msg"] = "<script>alert('Not Updated');</script>";
+                TempData["msg"] = "<p class=" + " \"alert alert-danger\"" + ">Not Updated!</ p > ";
             }
 
             var SearchElement = Session["SearchElement"] as List<SearchBox>;

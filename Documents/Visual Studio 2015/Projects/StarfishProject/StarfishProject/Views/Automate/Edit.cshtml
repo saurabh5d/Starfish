@@ -117,21 +117,39 @@
                                                     if (col.is_editable == "false")
                                                     {
                                                         DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
-
-                                                        <td>@Html.Label(row[col.column_name].ToString())</td>
+                                                        if (col.column_name.Contains("password"))
+                                                        {
+                                                            <td>@Html.Label("**********")</td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td>@Html.Label(row[col.column_name].ToString())</td>
+                                                        }
                                                     }
                                                     else
                                                     {
                                                         DataRow row = Model.dataset.Tables[tbl.table_name].Rows[0];
-
+                                                        if (col.column_name.Contains("password"))
+                                                        {
+                                                            <td>@Html.Password(col.column_name, "*****", new { style = "width:500px " })</td>
+                                                        }
+                                                        else
+                                                        {
                                                         <td>
-                                                            @*<input type="text" name=@col.column_name value=row[col.column_name].ToString();>*@
-                                                            @Html.TextArea(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px" })
+                                                            @if (row[col.column_name].ToString().Length <= 40)
+                                                            {
+                                                                @Html.TextBox(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px " })
+                                                            }
+                                                            else
+                                                            {
+                                                                @Html.TextArea(@col.column_name, row[col.column_name].ToString(), new { style = "width:500px " })
+                                                            }
                                                         </td>
+                                                                }
                                                             }
                                                         }
                                                     }
-                                        
+
                                                 }
 
                     </tr>

@@ -7,7 +7,7 @@ namespace StarfishProject.Helpers
     public class QueryBuilder
     {
         //Query for GetTable Without Join
-        public static string SelectQueryBuilder(Table tbl, int page)
+        public static string SelectQueryBuilder(Table tbl, int page,DatabaseSchema schema)
         {
             StringBuilder str = new StringBuilder("select ");
             str.Append(tbl.primaryKey.pk_name+",");
@@ -18,12 +18,20 @@ namespace StarfishProject.Helpers
 
             str.Remove(str.Length - 1, 1);
             str.Append(" From " + tbl.table_name);
-            str.Append(" Limit 15 Offset " + page * 15 + ";");
+            if(schema.database== "SqlServer")
+            {
+                str.Append(" Order by " + tbl.primaryKey.pk_name + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+            
             return str.ToString();
         }
 
         //Query for GetTable having Join
-        public static string JoinQueryBuilder(Table tbl, int page)
+        public static string JoinQueryBuilder(Table tbl, int page, DatabaseSchema schema)
         {
             StringBuilder str = new StringBuilder("select ");
             str.Append(tbl.table_name+"."+ tbl.primaryKey.pk_name + ",");
@@ -67,13 +75,22 @@ namespace StarfishProject.Helpers
                     str.Append(join);
                 }
             }
-            str.Append(" Limit 15 Offset " + page * 15 + ";");
+
+            if (schema.database == "SqlServer")
+            {
+                str.Append(" Order by " + tbl.primaryKey.pk_name + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+
             return str.ToString();
         }
 
-        public static string BuildSearchQuery(Table table, List<SearchBox> searchElement, int page)
+        public static string BuildSearchQuery(Table table, List<SearchBox> searchElement, int page, DatabaseSchema schema)
         {
-            StringBuilder str = new StringBuilder(SelectQueryBuilder(table, page));
+            StringBuilder str = new StringBuilder(SelectQueryBuilder(table, page,schema));
             int startindex = str.ToString().IndexOf("Limit");
             int endindex = str.Length;
             str.Remove(startindex, endindex - startindex);
@@ -100,14 +117,23 @@ namespace StarfishProject.Helpers
                     }
             }
             str.Remove(str.Length - 4, 4);
-            str.Append(" Limit 15 Offset " + page * 15);
+
+            if (schema.database == "SqlServer")
+            {
+                str.Append(" Order by " + table.primaryKey.pk_name + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+
             str.Append(";");
             return str.ToString();
         }
 
-        public static string BuildJoinSearchQuery(Table currTable, List<SearchBox> searchElement, int page)
+        public static string BuildJoinSearchQuery(Table currTable, List<SearchBox> searchElement, int page, DatabaseSchema schema)
         {
-            StringBuilder str = new StringBuilder(JoinQueryBuilder(currTable, page));
+            StringBuilder str = new StringBuilder(JoinQueryBuilder(currTable, page,schema));
             int startindex = str.ToString().IndexOf("Limit");
             int endindex = str.Length;
             str.Remove(startindex, endindex - startindex);
@@ -144,13 +170,20 @@ namespace StarfishProject.Helpers
                 }
                 str.Remove(str.Length - 4, 4);
             }
-            
-                
-            str.Append(" Limit 15 Offset " + page * 15 + ";");
+
+            if (schema.database == "SqlServer")
+            {
+                str.Append(" Order by " + currTable.primaryKey.pk_name + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+
             return str.ToString();
         }
 
-        public static string SortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement)
+        public static string SortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement, DatabaseSchema schema)
         {
             StringBuilder str = new StringBuilder("select ");
             str.Append(tbl.primaryKey.pk_name + ",");
@@ -168,21 +201,39 @@ namespace StarfishProject.Helpers
                 }
                 str.Remove(str.Length - 4, 4);
             }
-            str.Append(" Order by " + ColumnName);
-            str.Append(" Limit 15 Offset " + page * 15 + ";");
+            
+
+            if (schema.database == "SqlServer")
+            {
+                str.Append(" Order by " + ColumnName + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Order by " + ColumnName);
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+
             return str.ToString();
 
         }
 
-        public static string JoinSortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement)
+        public static string JoinSortQueryBuilder(Table tbl, string ColumnName, int page, List<SearchBox> searchElement, DatabaseSchema schema)
         {
-            StringBuilder str = new StringBuilder(BuildJoinSearchQuery(tbl, searchElement, page));
+            StringBuilder str = new StringBuilder(BuildJoinSearchQuery(tbl, searchElement, page,schema));
          
             int limitindex = str.ToString().IndexOf("Limit");
             str.Remove(limitindex, str.Length - limitindex);
-            
-            str.Append(" Order by " + ColumnName);
-            str.Append(" Limit 15 Offset " + page * 15 + ";");
+
+            if (schema.database == "SqlServer")
+            {
+                str.Append(" Order by " + ColumnName + " Offset " + page * 15 + " ROWS FETCH NEXT 15 ROWS ONLY ;");
+            }
+            else
+            {
+                str.Append(" Order by " + ColumnName);
+                str.Append(" Limit 15 Offset " + page * 15 + ";");
+            }
+
             return str.ToString();
 
         }
@@ -196,7 +247,7 @@ namespace StarfishProject.Helpers
             str.Remove(str.Length - 1, 1);*/
             str.Append(" from " + tbl.table_name);
             var pkey = DatabaseManager.getPrimaryKey(tbl);
-            str.Append(" where " + pkey + " = cast( " + id + " as " + tbl.primaryKey.pk_data_type + " )");
+            str.Append(" where " + pkey + "='" + id + "';");
             return str.ToString();
         }
 
@@ -207,7 +258,7 @@ namespace StarfishProject.Helpers
             str.Append("From " + tbl.table_name);
             var pkey = DatabaseManager.getPrimaryKey(tbl);
                
-            str.Append(" where "+pkey+ " = cast( " + id+ " as "+tbl.primaryKey.pk_data_type+" )");           
+            str.Append(" where "+pkey+ "='"+ id +"';");           
             return str.ToString();
         }
 
@@ -218,12 +269,13 @@ namespace StarfishProject.Helpers
             StringBuilder str = new StringBuilder(exequery);
             str.Remove(0, index);
 
-            str.Insert(0, "select count(*) ");
-            int limindex = str.ToString().IndexOf("Limit");
-            if (str.ToString().Contains("Offset 0"))
-                return str.ToString();
+            str.Insert(0, "select count(*) as count ");
+            int limindex=0;
+            if (str.ToString().Contains("Limit"))
+                limindex = str.ToString().IndexOf("Limit");
             else
-                return str.Remove(limindex, str.Length - limindex).Append(";").ToString();
+                 limindex = str.ToString().IndexOf("Order");
+            return str.Remove(limindex, str.Length - limindex).Append(";").ToString();
         }
 
         public static string InsertRowQuery(List<SearchBox> AddElement, Table tbl)
@@ -254,7 +306,8 @@ namespace StarfishProject.Helpers
                 str.Append(element.column_name + "=" + "'" + element.value + "' ,");
             }
             str.Remove(str.Length - 1, 1);
-            str.Append(" where "+tbl.primaryKey.pk_name + " = cast( " + id + " as " + tbl.primaryKey.pk_data_type + " )");
+            
+            str.Append(" where " + tbl.primaryKey.pk_name + "='" + id + "';");
 
             return str.ToString();
         }

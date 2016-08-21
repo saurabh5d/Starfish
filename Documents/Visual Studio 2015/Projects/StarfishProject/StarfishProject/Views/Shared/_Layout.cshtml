@@ -72,18 +72,10 @@
         </div>
     </div>
    
-            <div class="navbar-left sidenav" style="overflow:scroll;">
+            <div class="navbar-left sidenav" >
                 
                     <h4>@dbs.database</h4>
-                    <ul class="nav nav-pills nav-stacked" >
-                        
-                        <li>@using (Html.BeginForm("GetTable", "Automate", FormMethod.Get))
-                        {
-                            @Html.TextBox("TableName");
-                            <br>
-
-                            <input type="submit" value="Search" />
-                        }</li>
+                    <ul class="nav" >
                         
                             @foreach (var table in dbs.tables)
                             {

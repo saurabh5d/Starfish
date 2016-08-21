@@ -2,7 +2,7 @@
 @using System.Data;
 @using PagedList.Mvc;
 @using PagedList;
-
+@using System.Text;
 @{
     ViewBag.Title = "SortColumn";
 }
@@ -28,17 +28,24 @@
 
 </head>
 @{
+    int j = 0, passfield = -1;
+}
+@{
     using (Html.BeginForm("Search", "Automate", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
         <h1>Table : @tbl.table_display_name</h1>
-        @Html.ActionLink("Add", "Add", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary", @style = "color:white" }) <br /><br />
+        @Html.ActionLink("Add", "Add", "Automate", new { TableName = tbl.table_name }, new { @class = "btn btn-primary col-md-1 col-sm-offset-11", @style = "color:white" }) <br /><br />
 
          <table id="table" class="table" border="1" style="align-content:center;border:groove">
 
             <tr class="breadcrumb">
                 @foreach (var obj in tbl.columns)
                 {
-
+                    j++;
+                    if (obj.column_name.Contains("password"))
+                    {
+                        passfield = j;
+                    }
                     flag = 0;
                     <th>
                         @Html.ActionLink(obj.display_name, "SortColumn", "Automate", new { ColumnName = obj.column_name }, true)<br />
@@ -75,11 +82,26 @@
                 <tr>
                     @for (int i = 1; i < dr.ItemArray.Count(); i++)
                     {
-                        <td>@dr[i]</td>
+
+                        if (i == passfield)
+                        {
+                            StringBuilder starstring = new StringBuilder();
+                            <td>
+                                @for (int k = 0; k < dr[i].ToString().Length; k++)
+                                {
+                                    starstring.Append("*");
+                                }
+                                @starstring
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="word-wrap:break-word;">@dr[i]</td>
+                        }
                     }
                     <td>
                         @Html.ActionLink("Edit", "Edit", "Automate", new { TableName = tbl.table_name, id = dr[0] }, null) &nbsp;
-                        @Html.ActionLink("Delete", "Delete", "Automate", new { TableName = tbl.table_name, id = dr[0] }, new { onclick = "return confirm('Are you sure you wish to delete this Record?');" })
+                        @Html.ActionLink("Delete", "Delete", "Automate", new { TableName = tbl.table_name, id = dr[0] }, null)
                     </td>
                 </tr>
             }
